@@ -31,7 +31,7 @@ module "interview_john_brown" {
 }
 ```
 
-## Creating a Shared Termianl
+## Creating a Shared Terminal
 Terminal executions are not sharable to others in the Cloud9 session, making it difficult for the interviewer to view what the candidate is receiving from the program as they execute their code. The terminal also removes the output from previous executions, making it difficult for the candidate to view previous executions.
 
 These issues can be solved by instead running the program through this bash script, which saves all output to `out.log`.
