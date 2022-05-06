@@ -5,7 +5,7 @@
 
 # URL of the cloud9 url
 output "cloud9_url" {
-  value = "https://us-east-2.console.aws.amazon.com/cloud9/ide/${aws_cloud9_environment_ec2.main.id}"
+  value = "https://${data.aws_region.main.name}.console.aws.amazon.com/cloud9/ide/${aws_cloud9_environment_ec2.main.id}"
 }
 
 output "candidate_password" {
