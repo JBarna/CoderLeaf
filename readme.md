@@ -7,7 +7,7 @@ Pass the candidate's name to this Terraform module, then `terraform apply`. A ne
 ```
 module "interview_john_brown" {
     source = "git@github.com:jbarna/CoderLeaf.git"
-    name = "John Brown"
+    candidate_name = "John Brown"
 }
 ```
 
@@ -34,7 +34,7 @@ module "interview_john_brown" {
 ## Creating a Shared Terminal
 Terminal executions are not sharable to others in the Cloud9 session, making it difficult for the interviewer to view what the candidate is receiving from the program as they execute their code. The terminal also removes the output from previous executions, making it difficult for the candidate to view previous executions.
 
-These issues can be solved by instead running the program through [this bash script]](utilities/run.sh), which saves all output to `out.log`.
+These issues can be solved by instead running the program through [this bash script](utilities/run.sh), which saves all output to `out.log`.
 
 ```bash
 #!/bin/bash
@@ -54,7 +54,7 @@ $command 2>&1 | tee -a "$log_file"
 ```
 module "interview_john_brown" {
     source = "git@github.com:jbarna/CoderLeaf.git"
-    name = "John Brown"
+    candidate_name = "John Brown"
 
     # IAM User Permission Options
     username = <>
