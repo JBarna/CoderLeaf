@@ -66,3 +66,10 @@ data "pgp_decrypt" "main" {
 }
 
 data "aws_region" "main" {}
+
+resource "aws_ses_template" "main" {
+  name    = "DefaultCodingInterviewTemplate"
+  subject = "Details on your pair programming with {{interviewer_name}}"
+  html    = file("${path.module}/email_templates/candidate_invite.html")
+  text  = file("${path.module}/email_templates/candidate_invite.txt")
+}

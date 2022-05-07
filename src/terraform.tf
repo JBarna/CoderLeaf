@@ -5,4 +5,6 @@ terraform {
       version = "0.2.4"
     }
   }
+
+  experiments = [module_variable_optional_attrs]
 }

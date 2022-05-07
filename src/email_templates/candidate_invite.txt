@@ -1,0 +1,8 @@
+Hello {{candidate_name}}
+For your pair programming interview with {{interviewer_name}}, please login using this link: {{cloud9_url}} and the instructions below:
+1. Select "IAM user" , enter Account ID: {{account_id}}, and press next
+2. For "IAM User Name" enter: {{iam_user_name}}
+3. For "Password" enter: {{iam_user_password}}
+4. Select Sign In
+5. If you have any issues please bring them up to your interviewer at the beginning of your meeting.
+Thank you, and see you shortly.
