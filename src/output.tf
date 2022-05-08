@@ -11,3 +11,7 @@ output "cloud9_url" {
 output "candidate_password" {
     value = data.pgp_decrypt.main.plaintext
 }
+
+output "email_result" {
+  value = jsondecode(aws_lambda_invocation.send_email.result)["body"]
+}
