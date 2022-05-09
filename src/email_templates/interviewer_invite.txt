@@ -1,0 +1,12 @@
+Hello {{interviewer_name}},
+
+For your pair programming interview with {{candidate_name}}, please log into the AWS console and then use this link to access the shared coding session: {{cloud9_url}}
+
+If you candidate has any issues logging in, please direct them using the instructions below:
+1. Follow the link (send them the link above)
+2. Select "IAM user" , enter Account ID: {{account_id}}, and press next
+3. For "IAM User Name" enter: {{iam_user_name}}
+4. For "Password" enter: {{iam_user_password}}
+5. Select Sign In
+
+Thank you

@@ -2,39 +2,25 @@ exports.handler = async (event) => {
     
     const {
         ses_region,
-        candidate_name,
-        candidate_email,
-        interviewer_name,
-        interviewer_email,
-        cloud9_url,
-        account_id,
-        iam_user_name,
-        iam_user_password,
+        toAddress,
+        bccAddress,
         sesTemplateName,
-        fromEmail
+        fromEmail,
+        emailTemplateData
     } = event
     
     const AWS = require('aws-sdk');
     AWS.config.update({region: ses_region});
     
-    const templateData = JSON.stringify({
-        candidate_name,
-        interviewer_name,
-        cloud9_url,
-        account_id,
-        iam_user_name,
-        iam_user_password
-    })
-    
     // Create sendTemplatedEmail params 
     const params = {
       Destination: {
-        ToAddresses: [candidate_email],
-        BccAddresses: [interviewer_email]
+        ToAddresses: [toAddress],
+        BccAddresses: bccAddress == null ? [] : [bccAddress]
       },
       Source: fromEmail, //'no-reply@codenotifications.thesmartbasket.com',
       Template: sesTemplateName, //'DefaultCodingInterviewTemplate'
-      TemplateData: templateData
+      TemplateData: JSON.stringify(emailTemplateData)
     };
     
     let sendPromise = null

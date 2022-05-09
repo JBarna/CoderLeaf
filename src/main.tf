@@ -22,6 +22,9 @@ resource "aws_iam_user_policy" "main" {
     name ="cloud9_policy"
     user = aws_iam_user.main.name
 
+    # Limited the Resource to the cloud 9 instance which works when going to the URL directly, but
+    # Ruins the UI for some reason. But we don't want the candidate to see all the other cloud9 instances
+    # In the Account so this is the interm solution.
     policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -36,7 +39,7 @@ resource "aws_iam_user_policy" "main" {
                 "cloud9:DescribeEnvironments",
                 "cloud9:ListEnvironments"
             ],
-            "Resource": "*"
+            "Resource": "${aws_cloud9_environment_ec2.main.arn}"
         }
     ]
 }
@@ -67,11 +70,20 @@ data "pgp_decrypt" "main" {
 data "aws_region" "main" {}
 data "aws_caller_identity" "current" {}
 
-resource "aws_ses_template" "main" {
-  name    = var.email_template_name
+resource "aws_ses_template" "candidate_invite" {
+  count = var.candidate_email_template_name == null ? 1 : 0
+  name    = "coderleaf_candidate_email_invite"
   subject = "Details on your pair programming with {{interviewer_name}}"
   html    = file("${path.module}/email_templates/candidate_invite.html")
   text  = file("${path.module}/email_templates/candidate_invite.txt")
+}
+
+resource "aws_ses_template" "interviewer_invite" {
+  count = var.interviewer_email_template_name == null ? 1 : 0
+  name    = "coderleaf_interviewer_email_invite"
+  subject = "Details on your interview with {{candidate_name}}"
+  html    = file("${path.module}/email_templates/interviewer_invite.html")
+  text  = file("${path.module}/email_templates/interviewer_invite.txt")
 }
 
 resource "aws_iam_policy" "send_email" {
@@ -87,7 +99,8 @@ resource "aws_iam_policy" "send_email" {
             "Effect": "Allow",
             "Action": "ses:SendTemplatedEmail",
             "Resource": [
-                "arn:aws:ses:${data.aws_region.main.name}:${data.aws_caller_identity.current.account_id}:template/${var.email_template_name}",
+                "arn:aws:ses:${data.aws_region.main.name}:${data.aws_caller_identity.current.account_id}:template/${var.candidate_email_template_name == null ? aws_ses_template.candidate_invite[0].name : var.candidate_email_template_name}",
+                "arn:aws:ses:${data.aws_region.main.name}:${data.aws_caller_identity.current.account_id}:template/${var.interviewer_email_template_name == null ? aws_ses_template.interviewer_invite[0].name : var.interviewer_email_template_name}",
                 "arn:aws:ses:${data.aws_region.main.name}:${data.aws_caller_identity.current.account_id}:identity/*"
             ]
         }
@@ -129,16 +142,16 @@ resource "aws_iam_role_policy_attachment" "sendEmailPolicy" {
 resource "aws_lambda_function" "main" {
   # If the file is not in the current working directory you will need to include a 
   # path.module in the filename.
-  filename      = "${path.module}/lambda/sendCandidateEmail.zip"
+  filename      = "${path.module}/functions/sendCoderleafEmail.zip"
   function_name = "coderleaf_send_email"
   role          = aws_iam_role.lambda_role.arn
-  handler       = "sendCandidateEmail.handler"
+  handler       = "sendCoderleafEmail.handler"
   timeout = 20 # SES emails take a bit longer than the usual 3 second timeout
 
   # The filebase64sha256() function is available in Terraform 0.11.12 and later
   # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
   # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
-  source_code_hash = filebase64sha256("${path.module}/lambda/sendCandidateEmail.zip")
+  source_code_hash = filebase64sha256("${path.module}/functions/sendCoderleafEmail.zip")
 
   runtime = "nodejs14.x"
 
@@ -149,20 +162,43 @@ resource "aws_lambda_function" "main" {
   # }
 }
 
-resource "aws_lambda_invocation" "send_email" {
-  function_name = aws_lambda_function.main.function_name
+# resource "aws_lambda_invocation" "send_candidate_email" {
+#   function_name = aws_lambda_function.main.function_name
 
-  input = jsonencode({
-    ses_region = data.aws_region.main.name, # Assumes they're the same region... I could be wrong here
-    candidate_name = var.candidate_name,
-    candidate_email = "",
-    interviewer_name = "",
-    interviewer_email = "",
-    cloud9_url = "https://${data.aws_region.main.name}.console.aws.amazon.com/cloud9/ide/${aws_cloud9_environment_ec2.main.id}",
-    account_id = data.aws_caller_identity.current.account_id,
-    iam_user_name = join("_", concat(["candidate"], [for namePart in regexall("[a-zA-Z]+", var.candidate_name): lower(namePart)])),
-    iam_user_password = data.pgp_decrypt.main.plaintext,
-    sesTemplateName = var.email_template_name,
-    fromEmail = ""
-  })
-}
+#   input = jsonencode({
+#     ses_region = var.ses_region == null ? data.aws_region.main.name : var.ses_region,
+#     toAddress = var.candidate_email
+#     bccAddress = var.interviewer_email
+#     sesTemplateName = var.candidate_email_template_name == null ? aws_ses_template.candidate_invite[0].name : var.candidate_email_template_name,
+#     fromEmail = var.fromEmail
+
+#     emailTemplateData = {
+#       candidate_name = var.candidate_name
+#       interviewer_name = var.interviewer_name
+#       cloud9_url = "https://${data.aws_region.main.name}.console.aws.amazon.com/cloud9/ide/${aws_cloud9_environment_ec2.main.id}",
+#       account_id = data.aws_caller_identity.current.account_id,
+#       iam_user_name = join("_", concat(["candidate"], [for namePart in regexall("[a-zA-Z]+", var.candidate_name): lower(namePart)])),
+#       iam_user_password = data.pgp_decrypt.main.plaintext,
+#     }
+#   })
+# }
+
+# resource "aws_lambda_invocation" "send_interviewer_email" {
+#   function_name = aws_lambda_function.main.function_name
+
+#   input = jsonencode({
+#     ses_region = var.ses_region == null ? data.aws_region.main.name : var.ses_region,
+#     toAddress = var.interviewer_email
+#     sesTemplateName =var.interviewer_email_template_name == null ? aws_ses_template.interviewer_invite[0].name : var.interviewer_email_template_name,
+#     fromEmail = var.fromEmail
+
+#     emailTemplateData = {
+#       candidate_name = var.candidate_name
+#       interviewer_name = var.interviewer_name
+#       cloud9_url = "https://${data.aws_region.main.name}.console.aws.amazon.com/cloud9/ide/${aws_cloud9_environment_ec2.main.id}",
+#       account_id = data.aws_caller_identity.current.account_id,
+#       iam_user_name = join("_", concat(["candidate"], [for namePart in regexall("[a-zA-Z]+", var.candidate_name): lower(namePart)])),
+#       iam_user_password = data.pgp_decrypt.main.plaintext,
+#     }
+#   })
+# }
