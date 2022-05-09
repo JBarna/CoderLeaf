@@ -3,15 +3,11 @@
 #   value = "https://${var.region}.console.aws.amazon.com/cloud9/ide/${aws_cloud9_environment_ec2.example.id}"
 # }
 
-# URL of the cloud9 url
-output "cloud9_url" {
-  value = "https://${data.aws_region.main.name}.console.aws.amazon.com/cloud9/ide/${aws_cloud9_environment_ec2.main.id}"
+output "interviews" {
+  value = {for key, value in var.interviews: key => {
+      cloud9_url = "https://${data.aws_region.main.name}.console.aws.amazon.com/cloud9/ide/${aws_cloud9_environment_ec2.main[key].id}"
+      candidate_iam_user_name = aws_iam_user.main[key].name
+      candidate_iam_user_password = data.pgp_decrypt.main[key].plaintext
+    }
+  }
 }
-
-output "candidate_password" {
-    value = data.pgp_decrypt.main.plaintext
-}
-
-# output "email_result" {
-#   value = jsondecode(aws_lambda_invocation.send_email.result)["body"]
-# }
