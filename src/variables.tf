@@ -25,7 +25,7 @@ variable "interviewer_arn" {
 }
 
 variable interviews {
-    type = list(object({
+    type = map(object({
         candidate_name = string
         candidate_email = string
         interviewer_name = string
