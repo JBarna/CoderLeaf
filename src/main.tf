@@ -2,6 +2,8 @@ locals {
   snakecase_candidate_names = { for candidate_name, value in var.interviews: candidate_name => join("_", concat(["candidate"], [for namePart in regexall("[a-zA-Z]+", candidate_name): lower(namePart)]))}
 }
 
+data "aws_region" "main" {}
+
 resource "aws_cloud9_environment_ec2" "main" {
   for_each = var.interviews
   instance_type = "t2.micro"
@@ -15,7 +17,7 @@ resource "aws_cloud9_environment_ec2" "main" {
 resource "pgp_key" "main" {
   for_each = var.interviews
   name    = local.snakecase_candidate_names[each.key]
-  email   = each.value["candidate_email"] == null ? "${local.snakecase_candidate_names[each.key]}@gmail.com" : each.value["candidate_email"]
+  email   = "${local.snakecase_candidate_names[each.key]}@gmail.com"
   comment = "Generated PGP Key for Candidate ${each.key}"
 }
 
@@ -83,44 +85,3 @@ data "pgp_decrypt" "main" {
   private_key = pgp_key.main[each.key].private_key
   ciphertext_encoding = "base64"
 }
-
-# resource "aws_lambda_invocation" "send_candidate_email" {
-#   function_name = aws_lambda_function.main.function_name
-
-#   input = jsonencode({
-#     ses_region = var.ses_region == null ? data.aws_region.main.name : var.ses_region,
-#     toAddress = var.candidate_email
-#     bccAddress = var.interviewer_email
-#     sesTemplateName = var.candidate_email_template_name == null ? aws_ses_template.candidate_invite[0].name : var.candidate_email_template_name,
-#     fromEmail = var.fromEmail
-
-#     emailTemplateData = {
-#       candidate_name = var.candidate_name
-#       interviewer_name = var.interviewer_name
-#       cloud9_url = "https://${data.aws_region.main.name}.console.aws.amazon.com/cloud9/ide/${aws_cloud9_environment_ec2.main.id}",
-#       account_id = data.aws_caller_identity.current.account_id,
-#       iam_user_name = join("_", concat(["candidate"], [for namePart in regexall("[a-zA-Z]+", var.candidate_name): lower(namePart)])),
-#       iam_user_password = data.pgp_decrypt.main.plaintext,
-#     }
-#   })
-# }
-
-# resource "aws_lambda_invocation" "send_interviewer_email" {
-#   function_name = aws_lambda_function.main.function_name
-
-#   input = jsonencode({
-#     ses_region = var.ses_region == null ? data.aws_region.main.name : var.ses_region,
-#     toAddress = var.interviewer_email
-#     sesTemplateName =var.interviewer_email_template_name == null ? aws_ses_template.interviewer_invite[0].name : var.interviewer_email_template_name,
-#     fromEmail = var.fromEmail
-
-#     emailTemplateData = {
-#       candidate_name = var.candidate_name
-#       interviewer_name = var.interviewer_name
-#       cloud9_url = "https://${data.aws_region.main.name}.console.aws.amazon.com/cloud9/ide/${aws_cloud9_environment_ec2.main.id}",
-#       account_id = data.aws_caller_identity.current.account_id,
-#       iam_user_name = join("_", concat(["candidate"], [for namePart in regexall("[a-zA-Z]+", var.candidate_name): lower(namePart)])),
-#       iam_user_password = data.pgp_decrypt.main.plaintext,
-#     }
-#   })
-# }
