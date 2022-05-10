@@ -2,6 +2,7 @@ data "aws_region" "main" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_ses_template" "candidate_invite" {
+  provider = aws.ses
   count = var.candidate_email_template_name == null ? 1 : 0
   name    = "coderleaf_candidate_email_invite"
   subject = "Details on your pair programming with {{interviewer_name}}"
@@ -10,6 +11,7 @@ resource "aws_ses_template" "candidate_invite" {
 }
 
 resource "aws_ses_template" "interviewer_invite" {
+  provider = aws.ses
   count = var.interviewer_email_template_name == null ? 1 : 0
   name    = "coderleaf_interviewer_email_invite"
   subject = "Details on your interview with {{candidate_name}}"

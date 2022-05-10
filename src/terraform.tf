@@ -4,7 +4,10 @@ terraform {
       source = "ekristen/pgp"
       version = "0.2.4"
     }
-  }
 
-  experiments = [module_variable_optional_attrs]
+    aws = {
+      source  = "hashicorp/aws"
+      configuration_aliases = [ aws.ses ]
+    }
+  }
 }
