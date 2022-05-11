@@ -3,7 +3,7 @@ exports.handler = async (event) => {
     const {
         ses_region,
         toAddress,
-        bccAddress,
+        bccAddresses,
         sesTemplateName,
         fromEmail,
         emailTemplateData
@@ -16,7 +16,7 @@ exports.handler = async (event) => {
     const params = {
       Destination: {
         ToAddresses: [toAddress],
-        BccAddresses: bccAddress == null ? [] : [bccAddress]
+        BccAddresses: bccAddress == null ? [] : bccAddresses
       },
       Source: fromEmail, //'no-reply@codenotifications.thesmartbasket.com',
       Template: sesTemplateName, //'DefaultCodingInterviewTemplate'

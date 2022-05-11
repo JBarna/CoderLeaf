@@ -17,11 +17,12 @@ variable ses_region {
     default = null
 }
 
-variable interviews {
+variable candidates {
     type = map(object({
         candidate_email = string
-        interviewer_name = string
-        interviewer_email = string
-        interviewer_arn = string
+        interviewers = map(object({
+            arn = string
+            email = string
+        }))
     }))
 }
