@@ -84,7 +84,7 @@ resource "aws_lambda_function" "main" {
   # The filebase64sha256() function is available in Terraform 0.11.12 and later
   # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
   # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
-  source_code_hash = filebase64sha256("${path.module}/functions/sendCoderleafEmail.zip")
+  source_code_hash = data.archive_file.lambda.output_base64sha256
 
   runtime = "nodejs14.x"
 
@@ -93,4 +93,11 @@ resource "aws_lambda_function" "main" {
   #     foo = "bar"
   #   }
   # }
+}
+
+data "archive_file" "lambda" {
+  type             = "zip"
+  source_file      = "${path.module}/functions/sendCoderleafEmail.js"
+  output_file_mode = "0666"
+  output_path      = "${path.module}/functions/sendCoderleafEmail.zip"
 }
