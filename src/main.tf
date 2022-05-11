@@ -12,6 +12,12 @@ locals {
       }]
     ]
   ): "${relationship.candidate_name}.${relationship.interviewer_name}" => relationship}
+
+  # Create an index for candidates with start times specified to avoid 
+  # Creating unused resources 
+  candidates_with_times = {for candidate_name in flatten(
+    [for candidate_name, interview_info in var.candidates: interview_info.start_time == null ? [] : [candidate_name]]
+  ): candidate_name => true}
 }
 
 data "aws_region" "main" {}
@@ -30,6 +36,16 @@ resource "pgp_key" "main" {
   name    = local.snakecase_candidate_names[each.key]
   email   = "${local.snakecase_candidate_names[each.key]}@gmail.com"
   comment = "Generated PGP Key for Candidate ${each.key}"
+}
+
+resource "time_static" "starting_time" {
+  for_each = local.candidates_with_times
+  rfc3339 = var.candidates[each.key].start_time
+}
+
+resource "time_static" "ending_time" {
+  for_each = local.candidates_with_times
+  rfc3339 = timeadd(time_static.starting_time[each.key], var.candidates[each.key].duration) # pick up tomorrow....
 }
 
 resource "aws_iam_user" "main" {
