@@ -1,5 +1,7 @@
-variable interviews {
+variable candidates {
     type = map(object({
-        interviewer_arn = string
+        interviewers = map(object({
+            arn = string
+        }))
     }))
 }

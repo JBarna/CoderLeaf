@@ -3,3 +3,4 @@
 terraform.exe
 test.tf
 *.tfstate*
+*.zip
