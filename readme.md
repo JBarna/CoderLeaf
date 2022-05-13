@@ -5,7 +5,7 @@ An open source alternative to online coding interview tools using AWS Cloud9.
 Pass the candidate's name to this Terraform module, then `terraform apply`. A new Cloud9 instance will be created alongside a unique IAM User which only has permissions to access Cloud9.
 
 ```
-module "interview_john_brown" {
+module "interviews" {
   source = "git@github.com:jbarna/CoderLeaf.git?ref=basic"
   candidates = {
     "John Doe" = {                              # Candidate Name
