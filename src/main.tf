@@ -15,9 +15,9 @@ locals {
 
   # Create an index for candidates with start times specified to avoid 
   # Creating unused resources 
-  candidates_with_times = {for candidate_name in flatten(
-    [for candidate_name, interview_info in var.candidates: interview_info.start_time == null ? [] : [candidate_name]]
-  ): candidate_name => true}
+  # candidates_with_times = {for candidate_name in flatten(
+  #   [for candidate_name, interview_info in var.candidates: interview_info.start_time == null ? [] : [candidate_name]]
+  # ): candidate_name => true}
 }
 
 data "aws_region" "main" {}
@@ -38,16 +38,6 @@ resource "pgp_key" "main" {
   comment = "Generated PGP Key for Candidate ${each.key}"
 }
 
-resource "time_static" "starting_time" {
-  for_each = local.candidates_with_times
-  rfc3339 = var.candidates[each.key].start_time
-}
-
-resource "time_static" "ending_time" {
-  for_each = local.candidates_with_times
-  rfc3339 = timeadd(time_static.starting_time[each.key], var.candidates[each.key].duration) # pick up tomorrow....
-}
-
 resource "aws_iam_user" "main" {
     for_each = var.candidates
     name = local.snakecase_candidate_names[each.key]
@@ -61,25 +51,13 @@ resource "aws_iam_user_policy" "main" {
     # Limited the Resource to the cloud 9 instance which works when going to the URL directly, but
     # Ruins the UI for some reason. But we don't want the candidate to see all the other cloud9 instances
     # In the Account so this is the interm solution.
-    policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "cloud9:ValidateEnvironmentName",
-                "cloud9:UpdateUserSettings",
-                "cloud9:GetUserSettings",
-                "cloud9:DescribeEnvironmentMemberships",
-                "cloud9:DescribeEnvironments",
-                "cloud9:ListEnvironments"
-            ],
-            "Resource": "${aws_cloud9_environment_ec2.main[each.key].arn}"
-        }
-    ]
-}
-EOF
+    policy = templatefile("${path.module}/permissions/${var.candidates[each.key].start_time == null ? "basic" : "withTime"}.json.tmpl",
+      {
+        cloud9_arn = aws_cloud9_environment_ec2.main[each.key].arn
+        start_time = var.candidates[each.key].start_time
+        end_time = var.candidates[each.key].start_time == null ? "" : timeadd(var.candidates[each.key].start_time, var.candidates[each.key].duration)
+      }
+    )
 }
 
 resource "aws_iam_user_login_profile" "main" {

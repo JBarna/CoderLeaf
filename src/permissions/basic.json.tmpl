@@ -1,0 +1,17 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloud9:ValidateEnvironmentName",
+                "cloud9:UpdateUserSettings",
+                "cloud9:GetUserSettings",
+                "cloud9:DescribeEnvironmentMemberships",
+                "cloud9:DescribeEnvironments",
+                "cloud9:ListEnvironments"
+            ],
+            "Resource": "${cloud9_arn}"
+        }
+    ]
+}
