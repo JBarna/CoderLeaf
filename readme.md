@@ -73,7 +73,7 @@ $command 2>&1 | tee -a "$log_file"
 ## AWS Credentials Disclsoure
 By using this Terraform Module **you acknowledge that you understand** that this module will create access to specific Cloud9 resources in your AWS account and generates authetication credentials to those specific resources which are saved and shared in unencrypted plain text. 
 
-If you wish to limit permissions further, please consider created an AWS provider that is limited to only the permissions necessary for this module, and pointed to a child AWS account that contains non-interviewing resources.
+If you wish to limit permissions further, please consider creating an AWS provider that is limited to only the permissions necessary for this module, and pointed to a child AWS account that contains only interviewing resources.
 
 ## License
 Copyright 2022 Joel Barna
